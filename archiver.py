@@ -50,19 +50,6 @@ class Archiver(object):
         self.password = kwargs['password']
         self.driver_options = webdriver.ChromeOptions()
 
-
-        # set download default directory
-        # options.add_experimental_option('prefs', {"download.default_directory": os.path.realpath(os.path.join(os.getcwd(), 'arch', 'nordwind'))})
-        # self.driver = webdriver.Chrome(chrome_options=self.driver_options)
-
-
-        # chrome = webdriver.Chrome(chrome_options=options)
-        # chrome.get(WEBSKY_SITES[0])
-        # WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "orderSearchForm")))
-        # go_to_admin(chrome, LOGIN, PASSWORD)
-        # download_params(chrome)
-        # download_aliases(chrome)
-
     def start_download(self):
         Archiver.set_drivers_dir_to_path()
 
@@ -75,9 +62,14 @@ class Archiver(object):
             self.driver.get(websky_site)
             self.wait_for_class('orderSearchForm')
             self.go_to_admin()
+            self.download_params()
+            self.download_aliases()
 
     def wait_for_class(self, class_name):
         return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
+
+    def wait_for_xpath(self, xpath):
+        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath)))
 
     def go_to_admin(self):
         admin_url = Archiver.create_admin_url(self.driver.current_url)
@@ -89,6 +81,23 @@ class Archiver(object):
         password_input.send_keys(self.password)
         submit_button = self.driver.find_element_by_xpath('//button[@class="ng-binding"]').click()
         time.sleep(1)
+
+    def download_params(self):
+        download_params_button_wrapper = self.wait_for_class('btn-save-parameters')
+        download_params_button = download_params_button_wrapper.find_element_by_xpath('./a')
+        download_link = download_params_button.get_attribute('href')
+        self.driver.get(download_link)
+
+
+    def download_aliases(self):
+        go_to_aliases_button = self.wait_for_xpath("//a[contains(@href, 'admin#aliases')]")
+        go_to_aliases_button.click()
+        # TODO: fix it!
+        time.sleep(1)
+        download_aliases_buttons = self.driver.find_elements_by_xpath('//a[contains(@href, "generate-aliases")]')
+        for download_aliases_button in download_aliases_buttons:
+            self.driver.get(download_aliases_button.get_attribute('href'))
+        time.sleep(5)
         
     @staticmethod
     def get_aviacompany_name(url):
