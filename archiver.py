@@ -6,13 +6,16 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
-from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
-class Archiver(object):
-    def __init__(self, **kwargs):
-        super(Archiver, self).__init__()
+from base import BaseSelenium
+
+
+class Archiver(BaseSelenium):
+    def __init__(self, *args, **kwargs):
+        super(Archiver, self).__init__(*args, **kwargs)
 
         self.WEBSKY_SITES = [
              'https://booking.nordstar.ru/websky/#/search',
@@ -65,11 +68,6 @@ class Archiver(object):
             self.download_params()
             self.download_aliases()
 
-    def wait_for_class(self, class_name):
-        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
-
-    def wait_for_xpath(self, xpath):
-        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath)))
 
     def go_to_admin(self):
         admin_url = Archiver.create_admin_url(self.driver.current_url)
