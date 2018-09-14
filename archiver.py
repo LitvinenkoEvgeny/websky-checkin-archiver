@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import re
 import time
@@ -13,7 +15,7 @@ class Archiver(object):
         super(Archiver, self).__init__()
 
         self.WEBSKY_SITES = [
-             'https://booking.nordstar.ru/websky/search#/search',
+             'https://booking.nordstar.ru/websky/#/search',
              'https://booking.flyone.md/websky/#/search',
              'https://booking.georgian-airways.com/websky/search#/search',
              'https://booking.flyredwings.com/websky/#/search',
@@ -48,6 +50,7 @@ class Archiver(object):
         self.password = kwargs['password']
         self.driver_options = webdriver.ChromeOptions()
 
+
         # set download default directory
         # options.add_experimental_option('prefs', {"download.default_directory": os.path.realpath(os.path.join(os.getcwd(), 'arch', 'nordwind'))})
         # self.driver = webdriver.Chrome(chrome_options=self.driver_options)
@@ -60,17 +63,50 @@ class Archiver(object):
         # download_params(chrome)
         # download_aliases(chrome)
 
-    def start_download(self, site_config):
-        pass
+    def start_download(self):
+        Archiver.set_drivers_dir_to_path()
+
+        for websky_site in self.WEBSKY_SITES:
+            websky_site_name = Archiver.get_aviacompany_name(websky_site)
+            self.driver_options.add_experimental_option('prefs', {
+                "download.default_directory": os.path.realpath(os.path.join(os.getcwd(), 'arch', websky_site_name, 'websky'))
+            })
+            self.driver = webdriver.Chrome(chrome_options=self.driver_options)
+            self.driver.get(websky_site)
+            self.wait_for_class('orderSearchForm')
+            self.go_to_admin()
+
+    def wait_for_class(self, class_name):
+        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
+
+    def go_to_admin(self):
+        admin_url = Archiver.create_admin_url(self.driver.current_url)
+        self.driver.get(admin_url)
+        login_form = self.wait_for_class('login-form')
+        login_input = self.driver.find_element_by_xpath('//input[@name="login"]')
+        password_input = self.driver.find_element_by_xpath('//input[@name="password"]')
+        login_input.send_keys(self.login)
+        password_input.send_keys(self.password)
+        submit_button = self.driver.find_element_by_xpath('//button[@class="ng-binding"]').click()
+        time.sleep(1)
         
     @staticmethod
     def get_aviacompany_name(url):
         return url.split('.')[1]
+    
+    @staticmethod
+    def set_drivers_dir_to_path():
+        os.environ["PATH"] += ':' + os.path.realpath(os.path.join(os.getcwd(), 'drivers'));
+
+    @staticmethod
+    def create_admin_url(now_url):
+        return re.sub(r'\/(\?.+|#.+|search)', '/admin', now_url)
+        
 
 
-LOGIN = raw_input('Логин: ')
-PASSWORD = raw_input('Пароль: ')
-archiver = Archiver(login=LOGIN, password=PASSWORD)
+# LOGIN = raw_input('Логин: ')
+# PASSWORD = raw_input('Пароль: ')
+archiver.start_download()
 
 
 
