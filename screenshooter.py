@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import os
@@ -13,11 +12,31 @@ from selenium.webdriver.support import expected_conditions as EC
 from base import BaseSelenium
 
 class Screenshooter(BaseSelenium):
-    def __init__(self, driver, url, directory_to_save):
-        super(Screenshooter, self).__init__(*args, **kwargs)
+    def __init__(self, driver, sitename, directory):
+        super(Screenshooter, self).__init__(driver, sitename, directory)
         self.driver = driver
-        self.url = url
-        self.directory_to_save = directory_to_save
+        self.sitename = sitename
+        self.directory = directory
+        self.screenshot_directory = os.path.join(self.directory, 'screenshots')
+
+        if not os.path.exists(self.screenshot_directory):
+            os.makedirs(self.screenshot_directory)
 
     def start(self):
-        pass
+        print(self.wait_for_class('orderSearchForm'))
+        self.url = self.driver.current_url
+        self.do_main_page_screenshot()
+
+    def do_main_page_screenshot(self):
+        self.maximize_window()
+        self.take_screenshot('main_page')
+        time.sleep(20)
+
+
+    def take_screenshot(self, name):
+        self.driver.save_screenshot(self.screenshot_directory + os.path.sep + name + '.png')
+
+    def take_screenshots_in_all_sizes(self, name):
+        driver.maximize_window()
+        self.take_screenshot(name + '_desktop')
+        mobile_emulation = { "deviceName": "Nexus 5" }

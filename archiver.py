@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 from base import BaseSelenium
+from screenshooter import Screenshooter
 
 
 class Archiver(BaseSelenium):
@@ -58,15 +59,20 @@ class Archiver(BaseSelenium):
 
         for websky_site in self.WEBSKY_SITES:
             websky_site_name = Archiver.get_aviacompany_name(websky_site)
+            working_directory = os.path.realpath(os.path.join(os.getcwd(), 'arch', websky_site_name, 'websky'))
             self.driver_options.add_experimental_option('prefs', {
-                "download.default_directory": os.path.realpath(os.path.join(os.getcwd(), 'arch', websky_site_name, 'websky'))
+                "download.default_directory": working_directory
             })
             self.driver = webdriver.Chrome(chrome_options=self.driver_options)
             self.driver.get(websky_site)
-            self.wait_for_class('orderSearchForm')
-            self.go_to_admin()
-            self.download_params()
-            self.download_aliases()
+
+            self.screenshoter = Screenshooter(self.driver, websky_site_name, working_directory)
+            self.screenshoter.start()
+
+            # self.wait_for_class('orderSearchForm')
+            # self.go_to_admin()
+            # self.download_params()
+            # self.download_aliases()
 
 
     def go_to_admin(self):
